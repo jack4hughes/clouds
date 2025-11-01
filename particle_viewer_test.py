@@ -11,7 +11,11 @@ This also doubles as a bit of a tutorial for how to add particles and display th
 
 In implementations, You might want to split this script out into two seperate ROS nodes with shared memory for viewing particles.
 
-This script generates and displays a particle that has detected a single landmark. 
+This script generates and displays a particle that has detected a single landmark.
+
+You can zoom in and out and drag to move on the fastSLAM landmark.
+
+Just press Q to quit.
 """
 
 
