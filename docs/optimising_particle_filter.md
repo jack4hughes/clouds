@@ -1,3 +1,5 @@
+This is a pretty rough draft of a numpy explainer. I need to go through and edit it next week.
+
 # Optimising the Particle Filter:
 
 When we -- and by we I mean Yee -- First implemented a fastSLAM algorithm using a particle filter, we ran into multiple timing issues. I've collected the main issues we've run into in this document. To understand it, it might help if you have come across these topics before. If you havent, go and read about them!:
@@ -8,9 +10,9 @@ When we -- and by we I mean Yee -- First implemented a fastSLAM algorithm using 
 - Allocating memory for data in the stack/heap.
 
 # Issue 1: For Loop Speed and Vectorisation.
-The first issue we ran across was the speed of for loops in python. You might have heard that python is a slow language before, and this is true. "Pure" Python -- thats Python without lots of libraries -- can be very slow. However, there are libraries that can speed python up. The main libray used in the SLAM team is NumPy. 
+The first issue we ran across was the speed of for loops in python. You might have heard that python is a slow language before, and this is true. "Pure" Python -- that's Python that doesnt use external libraries -- can be very slow. However, we can import external libraries that can make python much faster when it does certian tasks. The main library used in the SLAM team is NumPy. 
 
-NumPy can speed code up immensely (see the jupyter notebook! TODO: Add jupyter notebook.) but only if used correctly. To unlock the full speed gains of numpy, you need to let numpy do the work. This leads us to the first rule of speeding up python code: **Dont use for loops if you can avoid it.**
+NumPy can speed code up by up to 100x, but only if used correctly. To unlock the full speed gains of numpy, you need to let numpy do the work. This leads us to the first rule of speeding up python code: **Dont use for loops if you can avoid it.**
 
 Instead, try to use built in numpy functions. Numpy is designed to be vectorisable. This means that we can add two numpy arrays just by calling np.add(arr_1, arr_2). This is much faster than calling np.add within a for loop.
 
@@ -44,7 +46,7 @@ This code takes 0.0023 seconds to run on my computer. Thats a 400x speed increas
 The takeaway from this should be that were you can, use numpy functions instead of for loops.
 
 ## Speed Issue 2: Pre-Allocation.
-Numpy is generally faster than Python, but its easy to fall intro traps: don't assume that all NumPy functions are designed for speed. The library isnt just designed for real-time applications like ours, so some numpy functions are slow.
+Numpy is generally faster than Python, but it's easy to fall into allocation traps: don't assume that all NumPy functions are designed for speed. The library isn't just just designed for real-time applications like ours, so some numpy functions are slow.
 
 One example of this is np.append(). This adds new data to the end of a numpy array, and is an example of a **dynamic array**. Dynamic arrays are great! They mean that we don't need to know how big the arrays we make with a program will end up being. This is the opposite to static arrays, which have a maximum size that they can reach.
 
