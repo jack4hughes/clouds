@@ -12,7 +12,8 @@ class ParticleCloud:
 
     Attributes:
     data: The particle data class that we are drawing.
-    create_fn: The function in charge of creating """
+    particle_creator: The function in charge of creating particles.
+    particle_updater: A function that can update the position of each particle """
     def __init__(
             self,
             particles_data: Particles,

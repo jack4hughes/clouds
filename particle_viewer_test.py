@@ -19,14 +19,14 @@ Just press Q to quit.
 """
 
 
-from particles import Particles, get_landmark_offset, get_landmark_cov
+from PyQt5.QtCore import QTimer
+from particles import Particles, get_landmark_offset, get_landmark_cov, ackermann_motion_update
 import sys
 import time
 import numpy as np
 from math import pi
 
 from PyQt5.QtWidgets import QApplication, QShortcut
-
 from particle_viewer import (
         create_direction_particle_cloud,
         ParticleView,
@@ -38,11 +38,18 @@ NUMBER_OF_PARTICLES = 50
 INITIAL_PARTICLE_POSITION = (0., 0., 0.)
 MAX_LANDMARKS = 100
 SENSOR_COVARIANCE = np.array(((0.3, 0.2), (0.2, 0.5)))
+ALPHAS = [0.1, 0.01, 0.001, 0.0001, 0.0001, 0.0001]
+TEST_VELOCITY = (2, 0.2)
+MOTION_UPDATE_TIMESTEP = 0.1 # 10fps update for now.
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    timer = QTimer()
     
     particles = Particles(NUMBER_OF_PARTICLES, INITIAL_PARTICLE_POSITION, PARTICLE_ERROR, MAX_LANDMARKS)
+
+
+
     
     #A "cloud" is a way of viewing our particles object in a GUI. create_direction_particle_cloud is used for dispalying objects with poses (IE our particles.)
     position_cloud = create_direction_particle_cloud(particles)
@@ -72,13 +79,26 @@ if __name__ == "__main__":
     
     # The final step is to create our View.
     view = ParticleView(particles)
+    
+    # Probably shouldnt be done like this!
+    def update_simulation():
+        new_particle_locations = ackermann_motion_update(particles, TEST_VELOCITY, MOTION_UPDATE_TIMESTEP, ALPHAS)
+        particles.poses = new_particle_locations
+        view.update_clouds()
+    
+    timer.timeout.connect(update_simulation)
+    timer_update_speed = MOTION_UPDATE_TIMESTEP * 1000
+    timer.start(timer_update_speed)
 
     # We have to attach clouds to our view individually.
     view.add_cloud(position_cloud)
     view.add_cloud(landmark_cloud_1)
+    
+    # This is the section that should be anitmated!
+
+    # Animtation function ends here.
 
     # And update_clouds just makes sure that each cloud is up to date. IF you were running this in a while loop youd call this on every iteration.
-    view.update_clouds()
     
     view.setWindowTitle("Particle Filter Visualiser")
    
