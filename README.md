@@ -31,15 +31,16 @@ This library sets out to simplify developing particle-filter algorithms using nu
 
 - **Always Preallocate:** By defining an array with the maximum number of landmarks and particles at the start and then slicing into it, the cost of allocating new numpy arrays can be avoided whenever a new landmark is added. This means we can avoid expensive allocation operations like np.concat or np.vstack, while keeping the code clean.
 - **Vectorise, Vectorise, Vectorise.** Numpy offers powerful vectorisation features. This library allows you to use them while allowing you to fall back on clean, Pythonic for and while loops if vectorisation is impossible.
-- **Slices over Object Lists** Instead of defining each particle as its own object, we define Particles as our primitive, then use iterators to return classes or views that slice down the numpy array. This way, you can easily write pythonic code for complex operations while relying on numpy's powerful vectorisation capabilities.
+- **Slices over Object Lists.** Instead of defining each particle as its own object, we define Particles as our primitive, then use iterators to return classes or views that slice down the numpy array. This way, you can easily write pythonic code for complex operations while relying on numpy's powerful vectorisation capabilities.
 
 # TODO:
 
 - [ ] Implement Landmark concentration ellipses.
-- [ ] Enable animation for Qt Window.
 - [ ] Full speed test of PyQt window draw time.
-- [ ] Write README in a more professional way.
+- [ ] Write the README more professionally.
 - [ ] Create unit tests.
-
+- [ ] Fix the direction of the direction arrows.
+- [ ] Add a landmark periodically using another QTimer to test the landmark update feature.
+- [ ] Rewrite display_viewer_test to avoid nested function definition. (not very cute.)
 + many more!
 
