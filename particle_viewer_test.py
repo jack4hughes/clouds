@@ -29,18 +29,23 @@ from PyQt5.QtWidgets import QApplication, QShortcut
 from particle_viewer import (
         create_direction_particle_cloud,
         ParticleView,
-        create_landmark_particle_cloud
-        )
+        create_landmark_particle_cloud)
 
 MODE = "dynamic"
-PARTICLE_ERROR = np.array((1, 1, 0.002))
 NUMBER_OF_PARTICLES = 200
-INITIAL_PARTICLE_POSITION = (0., -0., 0)
 MAX_LANDMARKS = 100
-SENSOR_COVARIANCE = np.array(((0.3, 0.2), (0.2, 0.5)))
+
+INITIAL_PARTICLE_POSITION = (0., -0., 0)
+PARTICLE_ERROR = np.array((1, 1, 0.002))
+
 ALPHAS = [0.1, 0.1, 0.000001, 0.000001, 0.0000001, 0.0000001]
 TEST_VELOCITY = (50, 0.01)
+
+SENSOR_COVARIANCE = np.array(((0.3, 0.2), (0.2, 0.5)))
+POLAR_LANDMARK_DETECTION = np.array((55., pi/2))
+
 MOTION_UPDATE_TIMESTEP = 1/30 # 30fps update for now, but system should be able to handle 60.
+LANDMARK_DETECTION_TIMESTEP = 1000
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -53,8 +58,8 @@ if __name__ == "__main__":
     position_cloud = create_direction_particle_cloud(particles)
 
     # Now we are simulating a landmark detection using some data
-    polar_landmark_detection = np.array((55., pi/2))
-    
+    polar_landmark_detection = POLAR_LANDMARK_DETECTION #Im just using a constant value here.
+
     # Convert the landmark detection from a single polar detection to 50 seperate landmark hypotheses in cartesian space. 
     cartesian_landmark_offset = get_landmark_offset(
         particles, 
@@ -98,7 +103,7 @@ if __name__ == "__main__":
     # This just tests adding landmarks to see if everything gets messy!
     n = 0
 
-    #TODO: This is bad code! need to rewrite
+    #TODO: This is bad code! need to rewrite to avoid globals and make whats happening more clear.
     def add_landmark_cloud():
         global n
         polar_landmark_detection = np.array((55., pi/2))
@@ -128,15 +133,12 @@ if __name__ == "__main__":
         print(f"number of particles: {n}")
      
     timer.timeout.connect(update_simulation)
-    timer_update_speed = MOTION_UPDATE_TIMESTEP * 1000
-
     landmark_timer.timeout.connect(add_landmark_cloud)
-    landmark_update_speed = 500
     
     if MODE == "dynamic":
         #runs a simple animation if you set dynamic mode.
-        timer.start(timer_update_speed)
-        landmark_timer.start(landmark_update_speed)
+        timer.start(MOTION_UPDATE_TIMESTEP)
+        landmark_timer.start(LANDMARK_DETECTION_TIMESTEP)
 
     # We have to attach clouds to our view individually.
        
