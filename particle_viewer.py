@@ -70,8 +70,8 @@ class ParticleView(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
-        self.scene.setSceneRect(-300, -300, 600, 600)  
-        self.setGeometry(0, 0, 800, 600)
+        self.scene.setSceneRect(-3, -3, 6, 6)  
+        self.setGeometry(0, 0, 800, 800)
         
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         

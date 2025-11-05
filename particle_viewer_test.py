@@ -18,7 +18,6 @@ You can zoom in and out and drag to move on the fastSLAM landmark.
 Just press Q to quit.
 """
 
-
 from PyQt5.QtCore import QTimer
 from particles import Particles, get_landmark_offset, get_landmark_cov, ackermann_motion_update
 import sys
@@ -33,13 +32,14 @@ from particle_viewer import (
         create_landmark_particle_cloud
         )
 
-PARTICLE_ERROR = np.array((1.5, 1.5, 0.2))
-NUMBER_OF_PARTICLES = 50
-INITIAL_PARTICLE_POSITION = (0., 0., 0.)
+MODE = "dynamic"
+PARTICLE_ERROR = np.array((1, 1, 0.002))
+NUMBER_OF_PARTICLES = 1
+INITIAL_PARTICLE_POSITION = (0., -1., pi)
 MAX_LANDMARKS = 100
 SENSOR_COVARIANCE = np.array(((0.3, 0.2), (0.2, 0.5)))
-ALPHAS = [0.1, 0.01, 0.001, 0.0001, 0.0001, 0.0001]
-TEST_VELOCITY = (2, 0.2)
+ALPHAS = [0.001, 0.00001, 0.00001, 0.0001, 0.0001, 0.0001]
+TEST_VELOCITY = (50, 0.2)
 MOTION_UPDATE_TIMESTEP = 0.1 # 10fps update for now.
 
 if __name__ == "__main__":
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     
     # The final step is to create our View.
     view = ParticleView(particles)
-    
-    # Probably shouldnt be done like this!
+   
+    # The amount of state means that this should be a class or a lambda in actual code.   
     def update_simulation():
         new_particle_locations = ackermann_motion_update(particles, TEST_VELOCITY, MOTION_UPDATE_TIMESTEP, ALPHAS)
         particles.poses = new_particle_locations
@@ -88,17 +88,14 @@ if __name__ == "__main__":
     
     timer.timeout.connect(update_simulation)
     timer_update_speed = MOTION_UPDATE_TIMESTEP * 1000
-    timer.start(timer_update_speed)
+    
+    if MODE == "dynamic":
+        #runs a simple animation if you set dynamic mode.
+        timer.start(timer_update_speed)
 
     # We have to attach clouds to our view individually.
     view.add_cloud(position_cloud)
     view.add_cloud(landmark_cloud_1)
-    
-    # This is the section that should be anitmated!
-
-    # Animtation function ends here.
-
-    # And update_clouds just makes sure that each cloud is up to date. IF you were running this in a while loop youd call this on every iteration.
     
     view.setWindowTitle("Particle Filter Visualiser")
    

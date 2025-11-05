@@ -9,25 +9,25 @@ class DirectionalParticleItem(QGraphicsItem):
     def __init__(self, x, y, angle, width):
         super().__init__()
         self.width = width
-        self.height = 3 * width
-        self.angle = angle
+        self.height = 0.7 * width
         self.setPos(x, y)
         self.setRotation(np.degrees(angle))  # Convert radians to degrees
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
 
     def boundingRect(self):
-        # Bounding box needs to contain the entire triangle
-        return QRectF(-self.width/2, -self.height/2, 
-                      self.width, self.height)
-
+        # Fixed bounding box to properly contain the arrow
+        # Added small margin to prevent artifacts
+        margin = 1
+        return QRectF(-self.width - margin, -self.height/2 - margin, 
+                      self.width + 2*margin, self.height + 2*margin)
     def paint(self, painter, option, widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        # Define triangle points (pointing upward by default)
+        #TODO: This needs to point left by default.
         # Tip at top, base at bottom
-        p1 = QPointF(0, -self.height/2)           # Top tip
-        p2 = QPointF(-self.width/2, self.height/2)  # Bottom left
-        p3 = QPointF(self.width/2, self.height/2)   # Bottom right
+        p1 = QPointF(0, 0)           # tip
+        p2 = QPointF(-self.width, self.height/2)  # Bottom left
+        p3 = QPointF(-self.width, -self.height/2)   # Bottom right
 
         triangle = QPolygonF([p1, p2, p3])
 
@@ -44,12 +44,12 @@ def create_direction_particle():
     y = 0
     theta = 0
 
-    particle = DirectionalParticleItem(x, y, theta, width=3)
+    particle = DirectionalParticleItem(x, y, theta, width=9)
     return particle
 
 def update_direction_particle(particle_data: Particle, particle_view: DirectionalParticleItem):
     x, y, theta = particle_data.pose
-    particle_view.setPos(x, y)
-    particle_view.setRotation(np.degrees(theta))
+    particle_view.setPos(x, -y)
+    particle_view.setRotation(np.degrees(-theta))
     
 
