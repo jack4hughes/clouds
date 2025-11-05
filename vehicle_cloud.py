@@ -6,10 +6,10 @@ import numpy as np
 
 class DirectionalParticleItem(QGraphicsItem):
     """This class is used to create a direction particle. A direction particle is anything with a full pose (IE a position and heading. This is represented by an arrow at the moment. The direction particle does not handle movement or uncertanty for now, its only a point. If you want to change how this is displayed, please read the docs! It should be fairly flexible."""
-    def __init__(self, x, y, angle, width):
+    def __init__(self, x, y, angle, height):
         super().__init__()
-        self.width = width
-        self.height = 0.7 * width
+        self.height = height
+        self.height = 3 * self.height
         self.setPos(x, y)
         self.setRotation(np.degrees(angle))  # Convert radians to degrees
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
