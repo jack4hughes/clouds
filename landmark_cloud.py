@@ -72,7 +72,4 @@ def update_landmark_mean_dot(particle: Particle, landmark_mean_dot: LandmarkMean
     """Updates the landmarks position based off data contained within"""
     index = landmark_mean_dot.index
     position = particle.landmarks[index, :]
-    print(
-        f"moving particle {index} to {position}"
-    )  # debugging string for now because the partial is a little gnarly.
     landmark_mean_dot.setPos(position[0], position[1])
