@@ -9,7 +9,7 @@ class DirectionalParticleItem(QGraphicsItem):
     def __init__(self, x, y, angle, height):
         super().__init__()
         self.height = height
-        self.height = 3 * self.height
+        self.width = 3 * self.height
         self.setPos(x, y)
         self.setRotation(np.degrees(angle))  # Convert radians to degrees
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
@@ -44,7 +44,7 @@ def create_direction_particle():
     y = 0
     theta = 0
 
-    particle = DirectionalParticleItem(x, y, theta, width=9)
+    particle = DirectionalParticleItem(x, y, theta, 9)
     return particle
 
 def update_direction_particle(particle_data: Particle, particle_view: DirectionalParticleItem):
