@@ -41,7 +41,7 @@ class ParticleCloud:
 
         self.set_visibility(False) # hides our group while we update everything.
 
-        for _ in range(1): #TODO: Need to fix this so it isn't hardcoded!
+        for _ in range(self.data.number_of_particles): 
             item = self.create_fn() #creates an item for each particle!
             self.items.append(item)
             self.group.addToGroup(item)
