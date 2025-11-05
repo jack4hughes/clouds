@@ -39,8 +39,9 @@ This library sets out to simplify developing particle-filter algorithms using nu
 - [ ] Full speed test of PyQt window draw time.
 - [ ] Write the README more professionally.
 - [ ] Create unit tests.
-- [ ] Fix the direction of the direction arrows.
-- [ ] Add a landmark periodically using another QTimer to test the landmark update feature.
+- [x] Fix the direction of the direction arrows.
+- [x] Add a landmark periodically using another QTimer to test the landmark update feature.
+- [ ] Fix landmark inversion issue.
 - [ ] Rewrite display_viewer_test to avoid nested function definition. (not very cute.)
 + many more!
 
