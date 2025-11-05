@@ -34,23 +34,21 @@ from particle_viewer import (
 
 MODE = "dynamic"
 PARTICLE_ERROR = np.array((1, 1, 0.002))
-NUMBER_OF_PARTICLES = 1
+NUMBER_OF_PARTICLES = 200
 INITIAL_PARTICLE_POSITION = (0., -1., pi)
 MAX_LANDMARKS = 100
 SENSOR_COVARIANCE = np.array(((0.3, 0.2), (0.2, 0.5)))
-ALPHAS = [0.001, 0.00001, 0.00001, 0.0001, 0.0001, 0.0001]
-TEST_VELOCITY = (50, 0.2)
-MOTION_UPDATE_TIMESTEP = 0.1 # 10fps update for now.
+ALPHAS = [0.000001, 0.00001, 0.00001, 0.0001, 0.0001, 0.0001]
+TEST_VELOCITY = (50, 0.01)
+MOTION_UPDATE_TIMESTEP = 1/30 # 10fps update for now.
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     timer = QTimer()
-    
+    landmark_timer = QTimer()
+
     particles = Particles(NUMBER_OF_PARTICLES, INITIAL_PARTICLE_POSITION, PARTICLE_ERROR, MAX_LANDMARKS)
 
-
-
-    
     #A "cloud" is a way of viewing our particles object in a GUI. create_direction_particle_cloud is used for dispalying objects with poses (IE our particles.)
     position_cloud = create_direction_particle_cloud(particles)
 
@@ -82,9 +80,19 @@ if __name__ == "__main__":
    
     # The amount of state means that this should be a class or a lambda in actual code.   
     def update_simulation():
+        #time ackermann update.
+        time_start = time.time()
         new_particle_locations = ackermann_motion_update(particles, TEST_VELOCITY, MOTION_UPDATE_TIMESTEP, ALPHAS)
+        update_time = time.time() - time_start
+        
+        # time redraw
+        time_start = time.time()
         particles.poses = new_particle_locations
         view.update_clouds()
+        redraw_time = time.time() - time_start
+        print(f"time taken to redraw: {redraw_time}")
+        print(f"time taken to update position: {update_time}")
+        print()
     
     timer.timeout.connect(update_simulation)
     timer_update_speed = MOTION_UPDATE_TIMESTEP * 1000
