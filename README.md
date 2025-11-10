@@ -31,17 +31,17 @@ This library sets out to simplify developing particle-filter algorithms using nu
 
 - **Always Preallocate:** By defining an array with the maximum number of landmarks and particles at the start and then slicing into it, the cost of allocating new numpy arrays can be avoided whenever a new landmark is added. This means we can avoid expensive allocation operations like np.concat or np.vstack, while keeping the code clean.
 - **Vectorise, Vectorise, Vectorise.** Numpy offers powerful vectorisation features. This library allows you to use them while allowing you to fall back on clean, Pythonic for and while loops if vectorisation is impossible.
-- **Slices over Object Lists.** Instead of defining each particle as its own object, we define Particles as our primitive, then use iterators to return classes or views that slice down the numpy array. This way, you can easily write pythonic code for complex operations while relying on numpy's powerful vectorisation capabilities.
+- **Slices over Object Lists.** Instead of defining each particle as its own object, we define Particles as our primitive, then use iterators to return classes or views that slice down the numpy array. This way, you can easily write pythonic code for complex operations while relying on numpy's powerful vectorisation capabilities. This also allows us to have greater control over memory allocation and de-allocation (see point 1) which will improve performance.
 
 # TODO:
 
 - [ ] Implement Landmark concentration ellipses.
-- [ ] Full speed test of PyQt window draw time.
+- [ ] Rewrite Landmark drawing to remove calling draw() for individual landmarks. (probably a big one!)
+- [ ] Rewrite particle_viewer_test and particle_viewer to handle dynamic updates in a nice way. (again, probably a big one!)
+- [x] Full speed test of PyQt window draw time.
 - [ ] Write the README more professionally.
 - [ ] Create unit tests.
-- [ ] Fix landmark inversion issue.
-- [ ] Rewrite display_viewer_test to avoid nested function definition. (not very cute.)
-- [ ] Remove strong linking between redrawing and particle position/landmark position updates.
+- [ ] Remove strong linking between redrawing and particle position/landmark position updates. (maybe not possible?)
 - [ ] Find way to invert graphicsView so we dont need to remember to invert y in each particle updater.
 + many more!
 

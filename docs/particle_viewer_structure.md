@@ -1,17 +1,18 @@
 # Particle Viewer:
-
 The particle viewer is a particle filter visualiser, written in PyQT. This should have significant perofrmance improvements over a graohing solution like MatPlotLib. Its also an excuse for me (jack) to learn some PyQt.
 
-## Basic Structure:
-Particle filters have lots of different hypotheses of the same objects position in space. In code this means that the graphics engine needs to desplay a lot of identical objects, drawn with slightly different attributes. To do this, follow these steps:
+## Basic Structure - V2:
+Particle filters have lots of different hypotheses of the same objects position in space. In code this means that the graphics engine needs to desplay a lot of identical objects, drawn with slightly different attributes. Initially, the particle visualiser was structured like this:
 
-1. Define how a particle should look and behave: This is a child of QGraphicsItem that draws an object. In vehicle_cloud, this is a triangle set up using a QPolygonF object.
+The simple approach, of assigning each particle a seperate QGraphicsItem object have been too slow, so we need to try some other approaches, I'll list them below:
 
-2. Create the create and update functions: These functions are used to create and update the particle objects defined in section 1. These are standalone functions. I prefer keeping them separate from the individual particle class, as they can vary quite a bit depending on the kind of shape you use to model your particles in section 1.
+1. Cloud-based drawing. We keep the particle cloud classes, but the draw function should be included in the cloud class, and is responsible for drawing all possible hypotheses in that cloud. This should lead to some speed up.
 
-3. Create a ParticleCloud: This is a small class that groups particles together in a QGraphicsItemGroup, then handles creating, updating, and destroying them using the functions defined in section 2. This allows us to easily group particles that represent the same object and act on them as a single entity.
+2. Detection-type based drawing monolith: A single object that draws ALL particles of a particular type. E.G. All blue cones, no matter what the landmark.
 
-4. Add your ParticleCloud to the ParticleViewer class: Add your cloud to the ParticleViewer class. This class creates a graphics scene and links our particle primitives (which we've grouped into clouds) to our data. This means we can call a single update_particles function and easily update all particle positions at once.
+1 is easier to implement and reason about, but reduces the number of seperate particles from 20,000 to 100 or so. It also introduces signifcantly more complex draw functions, which could slow our function down even more.
+
+2 will be the fastest (I think), but the complexity of batching all 
 
 
 ```mermaid
