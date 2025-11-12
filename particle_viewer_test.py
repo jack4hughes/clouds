@@ -18,7 +18,7 @@ You can zoom in and out and drag to move on the fastSLAM landmark.
 Just press Q to quit.
 """
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QElapsedTimer
 from particles import Particles, get_landmark_offset, get_landmark_cov, ackermann_motion_update
 import sys
 import time
@@ -39,13 +39,13 @@ INITIAL_PARTICLE_POSITION = (0., -0., 0)
 PARTICLE_ERROR = np.array((1, 1, 0.002))
 
 ALPHAS = [0.1, 0.1, 0.000001, 0.000001, 0.0000001, 0.0000001]
-TEST_VELOCITY = (50, 0.01)
+TEST_VELOCITY = (200, 0.1)
 
 SENSOR_COVARIANCE = np.array(((0.3, 0.2), (0.2, 0.5)))
 POLAR_LANDMARK_DETECTION = np.array((55., pi/2))
 
-MOTION_UPDATE_TIMESTEP = 1/30 # 30fps update for now, but system should be able to handle 60.
-LANDMARK_DETECTION_TIMESTEP = 1000
+MOTION_UPDATE_TIMESTEP = 1/10 # 30fps update for now, but system should be able to handle 60.
+LANDMARK_DETECTION_TIMESTEP = 300
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -54,19 +54,15 @@ if __name__ == "__main__":
 
     particles = Particles(NUMBER_OF_PARTICLES, INITIAL_PARTICLE_POSITION, PARTICLE_ERROR, MAX_LANDMARKS)
 
-    #A "cloud" is a way of viewing our particles object in a GUI. create_direction_particle_cloud is used for dispalying objects with poses (IE our particles.)
     position_cloud = create_direction_particle_cloud(particles)
 
-    # Now we are simulating a landmark detection using some data
-    polar_landmark_detection = POLAR_LANDMARK_DETECTION #Im just using a constant value here.
+    polar_landmark_detection = POLAR_LANDMARK_DETECTION 
 
-    # Convert the landmark detection from a single polar detection to 50 seperate landmark hypotheses in cartesian space. 
     cartesian_landmark_offset = get_landmark_offset(
         particles, 
         polar_landmark_detection
         )
 
-    # This can be combined with prev. line in prod. code if you feel like it.
     cartesian_landmark_positions = cartesian_landmark_offset + particles.poses[:, :2]
    
     """And now we just calculate the covariance at that specific distance."""
@@ -85,25 +81,21 @@ if __name__ == "__main__":
     view.add_cloud(position_cloud)
  
  # The amount of state means that this should be a class or a lambda in actual code.   
+    last_call = time.time()
+    update_simulation_time = QElapsedTimer()
     def update_simulation():
+        time_since_last_update = update_simulation_time.elapsed()
+        print(time_since_last_update)
+        
         #time ackermann update.
-        time_start = time.time()
         new_particle_locations = ackermann_motion_update(particles, TEST_VELOCITY, MOTION_UPDATE_TIMESTEP, ALPHAS)
-        update_time = time.time() - time_start
         
         # time redraw
-        time_start = time.time()
         particles.poses = new_particle_locations
         view.update_clouds()
-        redraw_time = time.time() - time_start
-        print(f"time taken to redraw: {int(redraw_time*1000)}ms")
-        print(f"time taken to update position: {int(update_time*1000)}ms")
-        print()
-    
-    # This just tests adding landmarks to see if everything gets messy!
-    n = 0
+        update_simulation_time.restart()
+    n = 1
 
-    #TODO: This is bad code! need to rewrite to avoid globals and make whats happening more clear.
     def add_landmark_cloud():
         global n
         polar_landmark_detection = np.array((55., pi/2))
@@ -114,24 +106,17 @@ if __name__ == "__main__":
         polar_landmark_detection
         )
 
-        # This can be combined with prev. line in prod. code if you feel like it.
+        calculation_start = time.time()
         cartesian_landmark_positions = cartesian_landmark_offset + particles.poses[:, :2]
-       
-        # And now we just calculate the covariance at that specific distance.
         lm_covariances = get_landmark_cov(polar_landmark_detection, SENSOR_COVARIANCE)
-
-        # Once we have calculated the correct positions and covariance values, we can add them to our Particles class.
+        
         particles.add_landmark(cartesian_landmark_positions)
-        particles.add_covariance(lm_covariances) #We shouldnt be using SENSOR_COVARIANCE like this! fix!
+        particles.add_covariance(lm_covariances) 
 
-        # And then finally, we can create a landmark particle cloud that lets us see the position of every landmark in space.
-        # This will eventually visualise the concentration ellipse of every landmark as well, but this isnt implemented yet.
         landmark_cloud_1 = create_landmark_particle_cloud(particles, n)
         n += 1
         view.add_cloud(landmark_cloud_1)
 
-        print(f"number of particles: {n}")
-     
     timer.timeout.connect(update_simulation)
     landmark_timer.timeout.connect(add_landmark_cloud)
     

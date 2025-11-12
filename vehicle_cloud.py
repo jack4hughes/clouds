@@ -3,6 +3,8 @@ from PyQt5.QtWidgets import QGraphicsItem
 from PyQt5.QtGui import QBrush, QPen, QPainter, QPolygonF 
 from PyQt5.QtCore import Qt, QPointF, QRectF
 import numpy as np
+from particles import Particles
+from particle_cloud import ParticleCloud
 
 class DirectionalParticleItem(QGraphicsItem):
     """This class is used to create a direction particle. A direction particle is anything with a full pose (IE a position and heading. This is represented by an arrow at the moment. The direction particle does not handle movement or uncertanty for now, its only a point. If you want to change how this is displayed, please read the docs! It should be fairly flexible."""
@@ -20,6 +22,7 @@ class DirectionalParticleItem(QGraphicsItem):
         margin = 1
         return QRectF(-self.width - margin, -self.height/2 - margin, 
                       self.width + 2*margin, self.height + 2*margin)
+    
     def paint(self, painter, option, widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -51,5 +54,24 @@ def update_direction_particle(particle_data: Particle, particle_view: Directiona
     x, y, theta = particle_data.pose
     particle_view.setPos(x, -y)
     particle_view.setRotation(np.degrees(-theta))
+
+
+
+def create_direction_particle_cloud(
+        data: Particles
+        ) -> ParticleCloud:
+    particle_cloud = ParticleCloud(
+            data,
+            create_direction_particle,
+            update_direction_particle, 
+            None,
+            None
+            )
+
+    particle_cloud.update_particles()
+
+    return particle_cloud
+
+
     
 

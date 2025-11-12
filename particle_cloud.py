@@ -4,16 +4,15 @@ from PyQt5.QtWidgets import (QGraphicsItem,
                              QGraphicsItemGroup
                              )
 import numpy as np
-from typing import Callable
+from typing import Callable, Dict
 
 
-class ParticleCloud:
+class NonBatchedParticleCloud:
     """A class that handles the displaying of a set of particles. MORE INFO HERE.
 
     Attributes:
     data: The particle data class that we are drawing.
-    particle_creator: The function in charge of creating particles.
-    particle_updater: A function that can update the position of each particle """
+    create_fn: The function in charge of creating """
     def __init__(
             self,
             particles_data: Particles,
@@ -25,6 +24,7 @@ class ParticleCloud:
         
         # initialise model.
         self.data = particles_data
+        
 
         # initialise creators and updators.
         self.create_fn = particle_creator
@@ -41,7 +41,7 @@ class ParticleCloud:
 
         self.set_visibility(False) # hides our group while we update everything.
 
-        for _ in range(self.data.number_of_particles): 
+        for _ in range(50): #TODO: Need to fix this so it isn't hardcoded!
             item = self.create_fn() #creates an item for each particle!
             self.items.append(item)
             self.group.addToGroup(item)
@@ -68,4 +68,42 @@ class ParticleCloud:
     
     def set_opacity(self, opacity):
         self.group.setOpacity(opacity)
+
+
+class BatchedParticleCloud(QGraphicsItem):
+    """A class that handles the displaying of a set of particles. MORE INFO HERE.
+
+    Attributes:
+    data: The particle data class that we are drawing.
+    color config: This will be a dict with a pen and brush.""" 
+    def __init__(
+            self,
+            data: Particles,
+            color_config: Dict
+            ):
+        
+        # initialise model.
+        self.data = data
+        self.color_config = color_config
+    
+    def paint(self, painter, option, widget):
+        raise NotImplementedError("""This is just an abstract class! It has no paint function. 
+
+You can inherit from this class and define a paint statement.""")
+
+
+class BatchedVehicleCloud(BatchedParticleCloud):
+    def __init__(
+            self,
+            data: Particles,
+            color_config: Dict
+            ):
+        self.data = data
+        self.color_config = color_config
+        points = [QPoint for point in particles.particle_view]
+
+    def paint(self, painter, option, widget):
+
+
+        
 

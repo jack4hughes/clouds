@@ -3,7 +3,6 @@ from particles import Particles
 from PyQt5.QtWidgets import (QGraphicsView, 
                              QGraphicsScene, 
                              )
-from particle_cloud import ParticleCloud
 
 from vehicle_cloud import (
         create_direction_particle,
@@ -16,12 +15,14 @@ from landmark_cloud import (
         )
 import numpy as np
 from functools import partial
-
+from particle_cloud import ParticleCloud
 
 
 
 PARTICLE_ERROR = np.array((1.5, 1.5, 0.2))
 
+
+#TODO: Move these definitions to their respective folders!
 def create_direction_particle_cloud(
         data: Particles
         ) -> ParticleCloud:
@@ -64,27 +65,22 @@ def create_landmark_particle_cloud(
 class ParticleView(QGraphicsView):
     """This draws and then displays our particles on the screen."""
     
-    def __init__(self, particles):
+    def __init__(self, particles, update_function=None, update_freq=None):
         super().__init__()
 
+        self.update_freq = update_freq
+        
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
-        self.scene.setSceneRect(-3, -3, 6, 6)  
+        self.scene.setSceneRect(-100, -100, 100, 100) 
+        self.scale(1/25, 1/25)
         self.setGeometry(0, 0, 800, 800)
         
         self.setDragMode(QGraphicsView.ScrollHandDrag)
-        
+         
         self.clouds = []
    
-    def wheelEvent(self, event):
-        """Enable zoom with mouse wheel."""
-        scale_factor = 1.15
-        if event.angleDelta().y() > 0:
-            self.scale(scale_factor, scale_factor)
-        else:
-            self.scale(1/scale_factor, 1/scale_factor)
-
     def add_cloud(self, cloud: ParticleCloud):
         """Add a named particle cloud to the scene."""
         # Remove existing cloud with same name if present
@@ -99,4 +95,7 @@ class ParticleView(QGraphicsView):
         
         # Initial update
 
+    def zoom_in(self):
+        self.scale()
+    
 

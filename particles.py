@@ -22,8 +22,22 @@ class Particles:
 
     This class is how we initialise and modify particle sets.
 
-    It should 
-    
+    inputs:
+    ___________
+    - number_of_particles: Defines the number of particles we want to use in our particle set. This is a static maximum.
+    - initial_pose: The initial mean pose of all the particles.
+    - initial_error: the covaraince error of the particles. (We should probably switch this out.)
+    - max_landmarks: The maximum number of landmarks we can detect before we start to replace landmarks with new detections.
+
+    attributes:
+    ___________
+    - observed_landmarks: The number of landmarks that have been observed so far.
+    - observed_covariances: the number of covarainces that have been observed so far. This should match landmarks in most cases.
+    - poses: The current pose of every particle hypothesis. – This is stored in a numpy array.
+    - importance_factors: A vector of importance importance_factors
+    - landmarks: an array of landmark detections. This is a numpy array that has dimensions number_of_particles x detected_landmarks x landmark_pose_hypotheses.
+    - 
+
     """
     def __init__(
         self,
