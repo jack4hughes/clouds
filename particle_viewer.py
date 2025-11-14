@@ -9,59 +9,23 @@ from vehicle_cloud import (
         update_direction_particle, 
                         )
 
-from landmark_cloud import (
-        create_landmark_mean_dot,
-        update_landmark_mean_dot
-        )
-import numpy as np
-from functools import partial
-from particle_cloud import ParticleCloud
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 
+class ParticleCloud(QGraphicsItem):
+    """This Abstract Class is in charge of drawing our particle clouds on the QGraphicsView map."""
+    def __init__(self, data, color_options=None):
+        super().__init__()
+        self.data = data
 
+    def paint(self, painter, option, widget):
+        painter.setPen(QPen("#FFFFFF", 5))
+        painter.setBrush(QBrush("FFFFFF"))
 
-PARTICLE_ERROR = np.array((1.5, 1.5, 0.2))
-
-
-#TODO: Move these definitions to their respective folders!
-def create_direction_particle_cloud(
-        data: Particles
-        ) -> ParticleCloud:
-    particle_cloud = ParticleCloud(
-            data,
-            create_direction_particle,
-            update_direction_particle, 
-            None,
-            None
-            )
-
-    particle_cloud.update_particles()
-
-    return particle_cloud
-
-def create_landmark_particle_cloud(
-        data: Particles,
-        landmark_index: int
-        ) -> ParticleCloud:
-
-    # need to curry this function
-    landmark_creation_fn = partial(
-            create_landmark_mean_dot,
-            landmark_index
-            )
-
-    particle_cloud = ParticleCloud(
-            data, 
-            landmark_creation_fn,
-            update_landmark_mean_dot, 
-            None,
-            None
-            )  
-
-    particle_cloud.update_particles()
-
-    return particle_cloud
-
-
+    def boundingRect(self):
+        pass
+        
 class ParticleView(QGraphicsView):
     """This draws and then displays our particles on the screen."""
     
@@ -86,7 +50,7 @@ class ParticleView(QGraphicsView):
         # Remove existing cloud with same name if present
         
         # Add to scene and store
-        self.scene.addItem(cloud.group)
+        self.scene.addItem(cloud)
         self.clouds.append(cloud)
 
     def update_clouds(self):

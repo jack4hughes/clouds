@@ -140,7 +140,15 @@ class Particles:
 
     def update_covariance(self, landmark_index, covariance_matrix) -> None:
         self.landmarks[:, landmark_index] = covariance_matrix
-    
+   
+    def get_bounding_rect(self):
+        """
+        Returns a bounding rectange with the furthest points.
+        """
+        max_particles = np.max(self.poses, 0)[0:2]
+        min_particles = np.min(self.poses, 0)[0:2]
+        print(max_particles)
+        print(min_particles)
 
 class Particle:
     """A particle class is how we get information about a single particle from our particles class.
@@ -349,23 +357,12 @@ def get_landmark_cov(landmark_polar_offset, sensor_noise_cov):
 
 
 if __name__ == "__main__":
-    particles = Particles(5000, np.array([0 ,0. ,0.]),np.array([0.01, 0.01, 0.001]))
-    import matplotlib.animation as animation
+    particles = Particles(10, np.array([0 ,0. ,0.]),np.array([0.01, 0.01, 0.001]))
     iterator_start_time = time.time()
     for particle in particles:
         print(particle.pose)
     iterator_time = time.time() - iterator_start_time
+    particles.get_bounding_rect()
     print(f"Pose print test time: {iterator_time * 1000}ms")
-    fig, ax = plt.subplots()
 
-    def animate(frame):
-        ax.clear()
-        # Update particles for this timestep
-        particles.poses = motion_update(particles, np.array((1, 0.2)), 0.1, [0.01, 0.0001, 0.0001, 0.001, 0.05, 0.1])
-        plot_particle_poses(particles, ax)
-        ax.set_title(f'Timestep {frame}')
 
-    ani = animation.FuncAnimation(fig, animate, frames=100, 
-                                interval=100, repeat=True)
-
-    plt.show()
