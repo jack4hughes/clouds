@@ -6,68 +6,10 @@ from PyQt5.QtWidgets import (QGraphicsItem,
 import numpy as np
 from typing import Callable, Dict
 
-
-class NonBatchedParticleCloud:
-    """A class that handles the displaying of a set of particles. MORE INFO HERE.
-
-    Attributes:
-    data: The particle data class that we are drawing.
-    create_fn: The function in charge of creating """
-    def __init__(
-            self,
-            particles_data: Particles,
-            particle_creator: Callable[[], QGraphicsItem],
-            particle_updater: Callable[[Particles, QGraphicsItem], None],
-            opacity,
-            color
-            ):
-        
-        # initialise model.
-        self.data = particles_data
-        
-
-        # initialise creators and updators.
-        self.create_fn = particle_creator
-        self.update_fn = particle_updater
-        
-        self.items = []
-
-        # initialise display properties
-        self.opacity = opacity
-        self.color = color
-
-        # group everything in a view
-        self.group = QGraphicsItemGroup()
-
-        self.set_visibility(False) # hides our group while we update everything.
-
-        for _ in range(50): #TODO: Need to fix this so it isn't hardcoded!
-            item = self.create_fn() #creates an item for each particle!
-            self.items.append(item)
-            self.group.addToGroup(item)
-
-        self.set_visibility(True)
-
-    def create_particles(self, number_of_particles, particle_factory):
-        """ creates a set of particledisplayitems from the underlying particle data. requires a factory to set up particles in the first place. 
-
-        requires a **particle factory** that is capable of creating a particle, and a **particle updater** that can update specific features of a particle that is already in the cache."""
-        
-        for particle_data in self.particles_data:
-            particle = self.create_fn()
-            particle.color = self.color 
-            self.items.append(particle)
-
-    def update_particles(self):
-        """updates particles current position based off current particle data."""
-        for particle_data, particle_view in zip(self.data, self.items):
-            self.update_fn(particle_data, particle_view)
-
-    def set_visibility(self, visible):
-        self.group.setVisible(visible)
-    
-    def set_opacity(self, opacity):
-        self.group.setOpacity(opacity)
+from PyQt5.QtGui import QBrush, QPen, QPainter, QPolygonF, QTransform 
+from PyQt5.QtCore import Qt, QPointF, QRectF
+import numpy as np
+from particles import Particles
 
 
 class BatchedParticleCloud(QGraphicsItem):
@@ -81,6 +23,7 @@ class BatchedParticleCloud(QGraphicsItem):
             data: Particles,
             color_config: Dict
             ):
+        super().__init__()
         
         # initialise model.
         self.data = data
@@ -96,14 +39,93 @@ class BatchedVehicleCloud(BatchedParticleCloud):
     def __init__(
             self,
             data: Particles,
+            height: float,
+            triangle_ratio: float,
             color_config: Dict
+
             ):
-        self.data = data
-        self.color_config = color_config
-        points = [QPoint for point in particles.particle_view]
+        super().__init__(data, None)
+        self.points = [QPointF(0., 0.) for point in range(self.data.number_of_particles)]
 
+        self.base_triangle = self.__create_base_triangle(height, triangle_ratio)
+
+        # allocates transforms so they can be accessed later.!
+        self.transforms = [QTransform() for i in range(self.data.number_of_particles)]
+
+    def update_positions(self):
+        relative_positions = self.data.get_relative_positions()
+        for point, position in zip(self.points, relative_positions):
+            print(point)
+            print(position)
+
+    def __create_base_triangle(self, height, base_ratio):
+        """A helper function that makes the creation of a base triangle easier. 
+
+        Could probably just put this inside __init__ and save a few cycles if you care about them!"""
+
+        width = height * base_ratio
+        p1 = QPointF(0., 0.)           # tip
+        p2 = QPointF(-width, height/2)  # Bottom left
+        p3 = QPointF(-width, -height/2)   # Bottom right
+
+        return QPolygonF([p1, p2, p3])
+
+
+    def boundingRect(self):
+        print("bounding rect called!")
+        bounding_rect = self.data.get_bounding_rect()
+        return QRectF(
+        QPointF(bounding_rect[0][0], bounding_rect[0][1]),  # min point
+        QPointF(bounding_rect[1][0], bounding_rect[1][1])   # max point
+    )
+
+
+    def update_transforms(self):
+        for i, particle in enumerate(self.data):
+            x, y, theta = particle.pose
+
+            #This should transform the base shape (a triangle) and show it easily.
+            transform = self.transforms[i]
+            transform.translate(x, y)
+            transform.rotateRadians(theta)
+
+            self.transforms[i] = transform #Do we need this? Might be passed as a reference here, but im being explicit.
+
+    
     def paint(self, painter, option, widget):
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-
+        painter.setBrush(QBrush(Qt.GlobalColor.red))
+        painter.setPen(QPen(Qt.PenStyle.NoPen))  # No outline
         
+        self.update_transforms() #might not be needed here!
+        
+        for transform in self.transforms:
+
+            painter.save()
+            painter.setTransform(transform, True)
+            painter.drawPolygon(self.base_triangle)
+            painter.restore()
+
+
+    def update_scale(self, view_scale):
+        """Call this when the view scale changes
+
+        -VIBECODED, need to profile and test.."""
+        if abs(view_scale - self.current_scale) > 0.01:  # Avoid unnecessary updates
+            self.current_scale = view_scale
+            # Create triangle with compensated size
+            world_height = self.screen_height / view_scale
+            self.base_triangle = self.__create_base_triangle(world_height, self.triangle_ratio)
+            self.update()  # Trigger repaint
+
+
+if __name__ == "__main__":
+    initial_pose = np.array((0., 0., 0.))
+    inital_error = np.array(((1., 1., np.pi/16)))
+    particles = Particles(10, initial_pose, inital_error)
+    
+    particle_cloud = BatchedVehicleCloud(particles, 10, 3, None)
+    print(particle_cloud)
+    print(particles.poses)
 

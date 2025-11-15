@@ -1,6 +1,7 @@
 """
 #Particles:
-This is the main particles class. Its used to model the pose and landmarks detected by each particle."""
+This is the main particles class. Its used to model the pose and landmarks detected by each particle.
+"""
 
 
 import numpy as np
@@ -145,10 +146,16 @@ class Particles:
         """
         Returns a bounding rectange with the furthest points.
         """
-        max_particles = np.max(self.poses, 0)[0:2]
+        max_particles = np.max(self.poses, 0)[0:2] #slice to remove angle.
         min_particles = np.min(self.poses, 0)[0:2]
-        print(max_particles)
-        print(min_particles)
+
+        return (min_particles, max_particles)
+
+    def get_mean(self):
+        return np.mean(self.poses, 0)
+
+    def get_relative_positions(self):
+        return self.data - self.get_mean()
 
 class Particle:
     """A particle class is how we get information about a single particle from our particles class.
@@ -358,11 +365,12 @@ def get_landmark_cov(landmark_polar_offset, sensor_noise_cov):
 
 if __name__ == "__main__":
     particles = Particles(10, np.array([0 ,0. ,0.]),np.array([0.01, 0.01, 0.001]))
-    iterator_start_time = time.time()
+    print("Particles:")
     for particle in particles:
         print(particle.pose)
-    iterator_time = time.time() - iterator_start_time
-    particles.get_bounding_rect()
-    print(f"Pose print test time: {iterator_time * 1000}ms")
+    bounding_rect = particles.get_bounding_rect()
+    print("bounding rect:")
+    print(bounding_rect)
+    print(f"mean: {particles.get_mean()}")
 
 

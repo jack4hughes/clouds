@@ -4,11 +4,6 @@ from PyQt5.QtWidgets import (QGraphicsView,
                              QGraphicsScene, 
                              )
 
-from vehicle_cloud import (
-        create_direction_particle,
-        update_direction_particle, 
-                        )
-
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -37,7 +32,7 @@ class ParticleView(QGraphicsView):
         self.scene = QGraphicsScene()
         self.setScene(self.scene)
 
-        self.scene.setSceneRect(-100, -100, 100, 100) 
+        self.scene.setSceneRect(-2, -2, 2, 2) 
         self.scale(1/25, 1/25)
         self.setGeometry(0, 0, 800, 800)
         

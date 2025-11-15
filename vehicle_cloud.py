@@ -13,8 +13,12 @@ class DirectionalParticleItem(QGraphicsItem):
         self.height = height
         self.width = 3 * self.height
         self.setPos(x, y)
-        self.setRotation(np.degrees(angle))  # Convert radians to degrees
+        self.setRotation(np.degrees(angle))
         self.setFlag(QGraphicsItem.ItemIgnoresTransformations, True)
+        
+        # These transforms 
+        self.left_edge_rel_pos = np.ndarray(-self.width, self.height/2)
+        self.right_edge_rel_pos = np.ndarray(-self.width, -self.height/2)
 
     def boundingRect(self):
         # Fixed bounding box to properly contain the arrow
@@ -29,7 +33,7 @@ class DirectionalParticleItem(QGraphicsItem):
         #TODO: This needs to point left by default.
         # Tip at top, base at bottom
         p1 = QPointF(0, 0)           # tip
-        p2 = QPointF(-self.width, self.height/2)  # Bottom left
+        p2 = QPointF()  # Bottom left
         p3 = QPointF(-self.width, -self.height/2)   # Bottom right
 
         triangle = QPolygonF([p1, p2, p3])
