@@ -48,9 +48,12 @@ class BatchedVehicleCloud(BatchedParticleCloud):
         self.points = [QPointF(0., 0.) for point in range(self.data.number_of_particles)]
 
         self.base_triangle = self.__create_base_triangle(height, triangle_ratio)
-
+        self.triangle_ratio = triangle_ratio
         # allocates transforms so they can be accessed later.!
         self.transforms = [QTransform() for i in range(self.data.number_of_particles)]
+
+        self.current_scale = 1
+        self.screen_height = height
 
     def update_positions(self):
         relative_positions = self.data.get_relative_positions()
@@ -72,7 +75,6 @@ class BatchedVehicleCloud(BatchedParticleCloud):
 
 
     def boundingRect(self):
-        print("bounding rect called!")
         bounding_rect = self.data.get_bounding_rect()
         return QRectF(
         QPointF(bounding_rect[0][0], bounding_rect[0][1]),  # min point
