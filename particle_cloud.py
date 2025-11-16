@@ -88,12 +88,12 @@ class BatchedVehicleCloud(BatchedParticleCloud):
 
             #This should transform the base shape (a triangle) and show it easily.
             transform = self.transforms[i]
+            transform.reset()
             transform.translate(x, y)
             transform.rotateRadians(theta)
 
             self.transforms[i] = transform #Do we need this? Might be passed as a reference here, but im being explicit.
 
-    
     def paint(self, painter, option, widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
@@ -108,7 +108,6 @@ class BatchedVehicleCloud(BatchedParticleCloud):
             painter.setTransform(transform, True)
             painter.drawPolygon(self.base_triangle)
             painter.restore()
-
 
     def update_scale(self, view_scale):
         """Call this when the view scale changes
