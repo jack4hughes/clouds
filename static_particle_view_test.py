@@ -31,7 +31,7 @@ particles = Particles(10, INITIAL_PARTICLE_POSITION, PARTICLE_ERROR, MAX_LANDMAR
 print(f"Created {particles.number_of_particles} particles")
 print(f"Bounding rect: {particles.get_bounding_rect()}")
 
-vehicle_cloud = BatchedVehicleCloud(particles, 10, 3, None)
+vehicle_cloud = BatchedVehicleCloud(particles)
 print(f"Vehicle cloud bounding rect: {vehicle_cloud.boundingRect()}")
 view = ParticleView(particles, None)
 

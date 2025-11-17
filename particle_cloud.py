@@ -12,6 +12,12 @@ import numpy as np
 from particles import Particles
 
 
+VEHICLE_ARROW_SIZE = 3
+VEHICLE_ARROW_WIDTH_RATIO = 1.2
+VEHICLE_ARROW_COLOR_CONFIG = {
+        "vehicle_brush_color": Qt.GlobalColor.red,
+        "vehicle_pen_color": Qt.PenStyle.NoPen}
+
 class BatchedParticleCloud(QGraphicsItem):
     """A class that handles the displaying of a set of particles. MORE INFO HERE.
 
@@ -24,7 +30,6 @@ class BatchedParticleCloud(QGraphicsItem):
             color_config: Dict
             ):
         super().__init__()
-        
         # initialise model.
         self.data = data
         self.color_config = color_config
@@ -39,10 +44,9 @@ class BatchedVehicleCloud(BatchedParticleCloud):
     def __init__(
             self,
             data: Particles,
-            height: float,
-            triangle_ratio: float,
-            color_config: Dict
-
+            height: float = VEHICLE_ARROW_SIZE,
+            triangle_ratio = VEHICLE_ARROW_WIDTH_RATIO,
+            color_config = VEHICLE_ARROW_COLOR_CONFIG
             ):
         super().__init__(data, None)
         self.points = [QPointF(0., 0.) for point in range(self.data.number_of_particles)]
@@ -67,20 +71,23 @@ class BatchedVehicleCloud(BatchedParticleCloud):
         Could probably just put this inside __init__ and save a few cycles if you care about them!"""
 
         width = height * base_ratio
-        p1 = QPointF(0., 0.)           # tip
-        p2 = QPointF(-width, height/2)  # Bottom left
-        p3 = QPointF(-width, -height/2)   # Bottom right
+        offset = width / 3
+        #Need to translate this a little to rotate from the middle?
+        p1 = QPointF(offset, 0.)           # tip
+        p2 = QPointF(offset - width, height/2)  # Bottom left
+        p3 = QPointF(offset - width, -height/2)   # Bottom right
 
         return QPolygonF([p1, p2, p3])
 
 
     def boundingRect(self):
         bounding_rect = self.data.get_bounding_rect()
+        padding = self.base_triangle[0].x()
+            
         return QRectF(
-        QPointF(bounding_rect[0][0], bounding_rect[0][1]),  # min point
+        QPointF(bounding_rect[0][0] - padding, bounding_rect[0][1]),  # min point
         QPointF(bounding_rect[1][0], bounding_rect[1][1])   # max point
-    )
-
+        )
 
     def update_transforms(self):
         for i, particle in enumerate(self.data):
@@ -97,8 +104,8 @@ class BatchedVehicleCloud(BatchedParticleCloud):
     def paint(self, painter, option, widget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
 
-        painter.setBrush(QBrush(Qt.GlobalColor.red))
-        painter.setPen(QPen(Qt.PenStyle.NoPen))  # No outline
+        painter.setBrush(QBrush(VEHICLE_ARROW_COLOR_CONFIG["vehicle_brush_color"]))
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
         
         self.update_transforms() #might not be needed here!
         
@@ -108,6 +115,7 @@ class BatchedVehicleCloud(BatchedParticleCloud):
             painter.setTransform(transform, True)
             painter.drawPolygon(self.base_triangle)
             painter.restore()
+
 
     def update_scale(self, view_scale):
         """Call this when the view scale changes
