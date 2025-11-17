@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (QGraphicsItem,
                              QGraphicsItemGroup
                              )
 import numpy as np
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 from PyQt5.QtGui import QBrush, QPen, QPainter, QPolygonF, QTransform 
 from PyQt5.QtCore import Qt, QPointF, QRectF
@@ -27,12 +27,14 @@ class BatchedParticleCloud(QGraphicsItem):
     def __init__(
             self,
             data: Particles,
-            color_config: Dict
+            color_config: Dict,
             ):
         super().__init__()
         # initialise model.
         self.data = data
         self.color_config = color_config
+        self.transforms = [QTransform() for i in range(self.data.number_of_particles)]
+
     
     def paint(self, painter, option, widget):
         raise NotImplementedError("""This is just an abstract class! It has no paint function. 
@@ -53,6 +55,90 @@ class BatchedVehicleCloud(BatchedParticleCloud):
 
         self.base_triangle = self.__create_base_triangle(height, triangle_ratio)
         self.triangle_ratio = triangle_ratio
+        # allocates transforms so they can be accessed later.!
+
+        self.current_scale = 1
+        self.screen_height = height
+
+    def update_positions(self):
+        relative_positions = self.data.get_relative_positions()
+        for point, position in zip(self.points, relative_positions):
+            print(point)
+            print(position)
+
+    def __create_base_triangle(self, height, base_ratio):
+        """A helper function that makes the creation of a base triangle easier. 
+
+        Could probably just put this inside __init__ and save a few cycles if you care about them!"""
+
+        width = height * base_ratio
+        offset = width / 3
+        #Need to translate this a little to rotate from the middle?
+        p1 = QPointF(offset, 0.)           # tip
+        p2 = QPointF(offset - width, height/2)  # Bottom left
+        p3 = QPointF(offset - width, -height/2)   # Bottom right
+
+        return QPolygonF([p1, p2, p3])
+
+
+    def boundingRect(self):
+        bounding_rect = self.data.get_bounding_rect()
+        padding = self.base_triangle[0].x()
+            
+        return QRectF(
+        QPointF(bounding_rect[0][0] - padding, bounding_rect[0][1]),  # min point
+        QPointF(bounding_rect[1][0], bounding_rect[1][1])   # max point
+        )
+
+    def update_transforms(self):
+        for i, particle in enumerate(self.data):
+            x, y, theta = particle.pose
+
+            #This should transform the base shape (a triangle) and show it easily.
+            transform = self.transforms[i]
+            transform.reset()
+            transform.translate(x, y)
+            transform.rotateRadians(theta)
+
+            self.transforms[i] = transform #Do we need this? Might be passed as a reference here, but im being explicit.
+
+    def paint(self, painter, option, widget):
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
+        painter.setBrush(QBrush(VEHICLE_ARROW_COLOR_CONFIG["vehicle_brush_color"]))
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
+        
+        self.update_transforms() #might not be needed here!
+        
+        for transform in self.transforms:
+
+            painter.save()
+            painter.setTransform(transform, True)
+            painter.drawPolygon(self.base_triangle)
+            painter.restore()
+
+
+    def update_scale(self, view_scale):
+        """Call this when the view scale changes
+
+        -VIBECODED, need to profile and test.."""
+        if abs(view_scale - self.current_scale) > 0.01:  # Avoid unnecessary updates
+            self.current_scale = view_scale
+            # Create triangle with compensated size
+            world_height = self.screen_height / view_scale
+            self.base_triangle = self.__create_base_triangle(world_height, self.triangle_ratio)
+            self.update()  # Trigger repaint
+
+class BatchedLandmarkCloud(BatchedParticleCloud):
+    def __init__(
+            self,
+            data: Particles,
+            height: float = VEHICLE_ARROW_SIZE,
+            color_config = VEHICLE_ARROW_COLOR_CONFIG
+            ):
+        super().__init__(data, None)
+        self.points = [QPointF(0., 0.) for point in range(self.data.number_of_particles)]
+
         # allocates transforms so they can be accessed later.!
         self.transforms = [QTransform() for i in range(self.data.number_of_particles)]
 
@@ -127,7 +213,6 @@ class BatchedVehicleCloud(BatchedParticleCloud):
             world_height = self.screen_height / view_scale
             self.base_triangle = self.__create_base_triangle(world_height, self.triangle_ratio)
             self.update()  # Trigger repaint
-
 
 if __name__ == "__main__":
     initial_pose = np.array((0., 0., 0.))

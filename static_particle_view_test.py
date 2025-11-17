@@ -27,11 +27,17 @@ POLAR_LANDMARK_DETECTION = np.array((55., pi/2))
 
 
 app = QApplication(sys.argv)
-particles = Particles(10, INITIAL_PARTICLE_POSITION, PARTICLE_ERROR, MAX_LANDMARKS)
+particles = Particles(
+        NUMBER_OF_PARTICLES, 
+        INITIAL_PARTICLE_POSITION, 
+        PARTICLE_ERROR, 
+        MAX_LANDMARKS
+        )
+
 print(f"Created {particles.number_of_particles} particles")
 print(f"Bounding rect: {particles.get_bounding_rect()}")
 
-vehicle_cloud = BatchedVehicleCloud(particles)
+vehicle_cloud = BatchedVehicleCloud(particles, 11)
 print(f"Vehicle cloud bounding rect: {vehicle_cloud.boundingRect()}")
 view = ParticleView(particles, None)
 
