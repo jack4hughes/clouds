@@ -4,17 +4,27 @@ The particle viewer is a particle filter visualiser, written in PyQT. This shoul
 ## Basic Structure - V2:
 Particle filters have lots of different hypotheses of the same objects position in space. In code this means that the graphics engine needs to desplay a lot of identical objects, drawn with slightly different attributes. Initially, the particle visualiser was structured like this:
 
-The simple approach, of assigning each particle a seperate QGraphicsItem object have been too slow, so we need to try some other approaches, I'll list them below:
+The simple approach, of assigning each particle a seperate QGraphicsItem object is just t
 
-1. Cloud-based drawing. We keep the particle cloud classes, but the draw function should be included in the cloud class, and is responsible for drawing all possible hypotheses in that cloud. This should lead to some speed up.
-
-2. Detection-type based drawing monolith: A single object that draws ALL particles of a particular type. E.G. All blue cones, no matter what the landmark.
-
-1 is easier to implement and reason about, but reduces the number of seperate particles from 20,000 to 100 or so. It also introduces signifcantly more complex draw functions, which could slow our function down even more.
-
-2 will be the fastest (I think), but the complexity of batching all 
+# transform approach:
+Luckily, all our main primitives (arrows, dots and Concentration Ellipses) can all be expressed as linear transformations of a primitive shape. A triangle for the arrow class, and a circle for the concentration ellipse class!
+This means we can use the following approach to draw representations of our data onto our QGraphicsView:
 
 
 ```mermaid
-classDiagram
-```
+flowchart TD
+    ShapePrimative[Shape Primative]
+    Data[Particle Data]
+    GetT(Get Transform from primative to desired shape)
+    ApplyT(Apply transform to painter)
+    PaintShape(Paint Primative)
+
+    ShapePrimative ----> PaintShape
+    Data-->GetT
+    subgraph  Loop [for item in particles]
+        GetT -->
+        ApplyT -->
+        PaintShape
+    end
+    
+```  
