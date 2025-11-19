@@ -7,16 +7,16 @@ This is the main particles class. Its used to model the pose and landmarks detec
 import numpy as np
 from numpy import sin, cos
 import time
-from typing import Union, Optional
+from typing import NamedTuple, Union, Optional
 import matplotlib.pyplot as plt
-import time
+from time import perf_counter
 
 
 np.set_printoptions(suppress=True, precision=5)
 
 NUMBER_OF_PARTICLES = 50
 TIMESTEP = 0.01
-NUMBER_OF_LANDMARKS = 50
+NUMBER_OF_LANDMARKS = 100
 
 class Particles:
     """A class that holds informatiom about a particle set.
@@ -111,11 +111,33 @@ class Particles:
         return pose
     
     def get_landmark_positions(self, landmark_index):
-        """Returns all positions of a specific landmark"""
+        """Returns all hypotheses of a specific landmark
+
+        IE landmarks[landmark_index]: [particle1, particle2 ... particleN]"""
         return self.landmarks[:, landmark_index, :].reshape(NUMBER_OF_PARTICLES, 2)
+
+    def get_particle_landmark_hypotheses(self, particle_index):
+        """
+
+        Gets all the landmark hypotheses associated with a specific particle.
+
+        IE landmarks[particle]: [landmark1, landmark2 ..., landmarkN]
+
+        """
+        return self.landmarks[particle_index].reshape(self.observed_landmarks, 2)
     
-    def add_landmark(self, landmark_positions) -> None:
-        """Increases the number of visible landmarks by one.
+    def add_landmark(self, landmark_positions: np.ndarray) -> None:
+        """adds a landmark data to the particle set. particles
+        
+        inputs:
+        ___________
+        landmark_positions: An already calculated array of particle hypotheses in cartesian space.
+        You need to calculate where the landmarks are before you add them to this function using 
+        get_landmark_offset (or your own equivilent function.)
+
+        outputs:
+        ___________
+        none.
 
         TODO: Implement a way to define the noise profile of a landmark."""        
         array_size = min(self.observed_landmarks, self.max_landmarks)
@@ -132,15 +154,26 @@ class Particles:
     ) -> None:
         self.landmarks[:, landmark_index, :] = landmark_position
 
-    def add_covariance(self, covariance_matrix: np.ndarray) -> None:
+    def add_covariance(self, covariances: np.ndarray) -> None:
+        """
+        adds a covariance matrix to self.covariance in a fast way.
+
+        inputs:
+        ___________
+        covariances: an array of covariance matrices. These need to be calculated before being passed to 
+        this function (use get_landmark_cov for this, or your own function.) 
+        """
         array_size = min(self.observed_covariances, self.max_landmarks)
         array_end = array_size + 1
         self.covariance = self.__covariance_array[:, :array_end, :, :]
-        self.covariance[:, self.observed_covariances] = covariance_matrix
+        self.covariance[:, self.observed_covariances] = covariances
         self.observed_covariances += 1
 
-    def update_covariance(self, landmark_index, covariance_matrix) -> None:
-        self.landmarks[:, landmark_index] = covariance_matrix
+    def update_covariance(self, landmark_index, covariances) -> None:
+        """
+        Updates an already exisiting set of covariance matrices (need to adjust this when we add exiting landmark detections where not all particles detect particles.)
+        """
+        self.landmarks[:, landmark_index] = covariances
    
     def get_bounding_rect(self):
         """
@@ -151,11 +184,17 @@ class Particles:
 
         return (min_particles, max_particles)
 
-    def get_mean(self):
+    def get_mean(self) -> np.ndarray:
+        """returns the mean of the entire dataset."""
         return np.mean(self.poses, 0)
 
-    def get_relative_positions(self):
+    def get_relative_positions(self) -> np.ndarray:
+        """gets the position of each point in the dataset relative to the mean."""
         return self.data - self.get_mean()
+
+    def get_lm_cov_eigendecomposition(self):
+        """Gets the eigendecomposition for each covariance matrix and returns it """
+        return np.linalg.eigh(self.covariance) #Covariance matricies have nice properties that we can use to speed this up a little.
 
 class Particle:
     """A particle class is how we get information about a single particle from our particles class.
@@ -364,13 +403,30 @@ def get_landmark_cov(landmark_polar_offset, sensor_noise_cov):
 
 
 if __name__ == "__main__":
-    particles = Particles(10, np.array([0 ,0. ,0.]),np.array([0.01, 0.01, 0.001]))
+    particles = Particles(100, np.array([0 ,0. ,0.]),np.array([0.01, 0.01, 0.001]))
     print("Particles:")
+    decomposition_times_dict = {}
+    for i in range(100):
+        particles.add_landmark(np.array((1., 1.))) 
+        particles.add_covariance(np.array([[1., 0.], [0., 2.]]))
+        
+        start_time =time.perf_counter()
+        particles.get_lm_cov_eigendecomposition()
+        end_time = time.perf_counter() - start_time
+        decomposition_times_dict[i] = end_time
+
+    print("Basic Particle analysis.")
     for particle in particles:
         print(particle.pose)
     bounding_rect = particles.get_bounding_rect()
-    print("bounding rect:")
-    print(bounding_rect)
+    print(f"bounding rect: {bounding_rect}")
     print(f"mean: {particles.get_mean()}")
 
+    print("Basic Landmark Analysis:")
+    decomposition_start_time = perf_counter()
+    print(f"landmark positions: {particles.landmarks[0]}")
+    print(f"landmark covariances: {particles.covariance[0]}")
+    print("landmark eigendecomposition times:")
 
+    plt.plot(decomposition_times_dict.keys(), decomposition_times_dict.values())
+    plt.show()
